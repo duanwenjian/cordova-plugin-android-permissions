@@ -1,3 +1,4 @@
+cordova.define("cordova-plugin-android-permissions.Permissions", function(require, exports, module) {
 var permissionsName = 'Permissions';
 
 function Permissions() {
@@ -190,5 +191,11 @@ Permissions.prototype.hasPermission = function (permission, successCallback, err
     }
     this.checkPermission.call(this, permission, successCallback, errorCallback);
 };
+Permissions.prototype.goToAppSetting = function (successCallback, errorCallback) {
+    console.log("goToAppSetting() function deprecated. Considers using goToAppSetting()");
+    cordova.exec(successCallback, errorCallback,permissionsName,"goToAppSetting");
+};
 
 module.exports = new Permissions();
+
+});
