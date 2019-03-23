@@ -51,7 +51,7 @@ public class Permissions extends CordovaPlugin {
                 }
             });
             return true;
-        } else if (ACTION_REQUEST_PERMISSIONS.equals(action)) { //权限获取
+        } else if (ACTION_REQUEST_PERMISSIONS.equals(action) || ACTION_REQUEST_PERMISSION.equals(action)) { //权限获取
             cordova.getThreadPool().execute(new Runnable() {
                 public void run() {
                     try {
