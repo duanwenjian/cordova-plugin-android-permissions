@@ -1,4 +1,3 @@
-cordova.define("cordova-plugin-android-permissions.Permissions", function(require, exports, module) {
 var permissionsName = 'Permissions';
 
 function Permissions() {
@@ -198,4 +197,3 @@ Permissions.prototype.goToAppSetting = function () {
 
 module.exports = new Permissions();
 
-});
