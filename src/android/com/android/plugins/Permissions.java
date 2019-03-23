@@ -27,6 +27,8 @@ public class Permissions extends CordovaPlugin {
 
     private static final String KEY_ERROR = "error";
     private static final String KEY_MESSAGE = "message";
+    private static final String KEY_ACTIVE = "active";
+    private static final String KEY_PERMISSION_LIST = "permissionList";
     private static final String KEY_RESULT_PERMISSION = "hasPermission";
 
     private CallbackContext permissionsCallback;
@@ -36,19 +38,12 @@ public class Permissions extends CordovaPlugin {
         if (ACTION_CHECK_PERMISSION.equals(action)) {
             cordova.getThreadPool().execute(new Runnable() {
                 public void run() {
-                    checkPermissionAction(callbackContext, args);
-                }
-            });
-            return true;
-        } else if (ACTION_REQUEST_PERMISSION.equals(action) || ACTION_REQUEST_PERMISSIONS.equals(action)) {
-            cordova.getThreadPool().execute(new Runnable() {
-                public void run() {
                     try {
-                        requestPermissionAction(callbackContext, args);
+                        checkPermissionAction(callbackContext, args);
                     } catch (Exception e) {
                         e.printStackTrace();
                         JSONObject returnObj = new JSONObject();
-                        addProperty(returnObj, KEY_ERROR, ACTION_REQUEST_PERMISSION);
+                        addProperty(returnObj, KEY_ERROR, ACTION_REQUEST_PERMISSIONS);
                         addProperty(returnObj, KEY_MESSAGE, "Request permission has been denied.");
                         callbackContext.error(returnObj);
                         permissionsCallback = null;
@@ -56,7 +51,23 @@ public class Permissions extends CordovaPlugin {
                 }
             });
             return true;
-        }else if(action.equals("goToAppSetting")){
+        } else if (ACTION_REQUEST_PERMISSIONS.equals(action)) { //权限获取
+            cordova.getThreadPool().execute(new Runnable() {
+                public void run() {
+                    try {
+                        requestPermissionAction(callbackContext, args);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        JSONObject returnObj = new JSONObject();
+                        addProperty(returnObj, KEY_ERROR, ACTION_REQUEST_PERMISSIONS);
+                        addProperty(returnObj, KEY_MESSAGE, "Request permission has been denied.");
+                        callbackContext.error(returnObj);
+                        permissionsCallback = null;
+                    }
+                }
+            });
+            return true;
+        } else if (action.equals("goToAppSetting")) { //跳转设置页面
             goToAppSetting(cordova.getActivity());
             return true;
         }
@@ -72,7 +83,7 @@ public class Permissions extends CordovaPlugin {
         JSONObject returnObj = new JSONObject();
         if (permissions != null && permissions.length > 0) {
             //Call checkPermission again to verify
-            boolean hasAllPermissions = hasAllPermissions(permissions);
+            boolean hasAllPermissions = hasAllPermissions(permissions).getBoolean(KEY_ACTIVE);
             addProperty(returnObj, KEY_RESULT_PERMISSION, hasAllPermissions);
             permissionsCallback.success(returnObj);
         } else {
@@ -83,24 +94,18 @@ public class Permissions extends CordovaPlugin {
         permissionsCallback = null;
     }
 
-    private void checkPermissionAction(CallbackContext callbackContext, JSONArray permission) {
+    private void checkPermissionAction(CallbackContext callbackContext, JSONArray permission) throws Exception {
         if (permission == null || permission.length() == 0 || permission.length() > 1) {
             JSONObject returnObj = new JSONObject();
             addProperty(returnObj, KEY_ERROR, ACTION_CHECK_PERMISSION);
             addProperty(returnObj, KEY_MESSAGE, "One time one permission only.");
             callbackContext.error(returnObj);
+        } else if (permission.getJSONArray(0) != null && permission.getJSONArray(0).length() > 0) {
+            callbackContext.success(hasAllPermissions(permission.getJSONArray(0)));
         } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             JSONObject returnObj = new JSONObject();
-            addProperty(returnObj, KEY_RESULT_PERMISSION, true);
+            addProperty(returnObj, KEY_ACTIVE, true);
             callbackContext.success(returnObj);
-        } else {
-            try {
-                JSONObject returnObj = new JSONObject();
-                addProperty(returnObj, KEY_RESULT_PERMISSION, cordova.hasPermission(permission.getString(0)));
-                callbackContext.success(returnObj);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
         }
     }
 
@@ -114,7 +119,7 @@ public class Permissions extends CordovaPlugin {
             JSONObject returnObj = new JSONObject();
             addProperty(returnObj, KEY_RESULT_PERMISSION, true);
             callbackContext.success(returnObj);
-        } else if (hasAllPermissions(permissions)) {
+        } else if (hasAllPermissions(permissions).getBoolean(KEY_ACTIVE)) {
             JSONObject returnObj = new JSONObject();
             addProperty(returnObj, KEY_RESULT_PERMISSION, true);
             callbackContext.success(returnObj);
@@ -131,25 +136,30 @@ public class Permissions extends CordovaPlugin {
             try {
                 stringArray[i] = permissions.getString(i);
             } catch (JSONException ignored) {
-                //Believe exception only occurs when adding duplicate keys, so just ignore it
             }
         }
         return stringArray;
     }
 
-    private boolean hasAllPermissions(JSONArray permissions) throws JSONException {
+    private JSONObject hasAllPermissions(JSONArray permissions) throws JSONException {
         return hasAllPermissions(getPermissions(permissions));
     }
 
-    private boolean hasAllPermissions(String[] permissions) throws JSONException {
+    private JSONObject hasAllPermissions(String[] permissions) throws JSONException {
+        JSONObject returnObj = new JSONObject();
+        JSONObject perList = new JSONObject();
 
+        addProperty(returnObj, KEY_ACTIVE, true);
+        addProperty(returnObj, KEY_PERMISSION_LIST, perList);
         for (String permission : permissions) {
             if (!cordova.hasPermission(permission)) {
-                return false;
+                addProperty(returnObj.getJSONObject(KEY_PERMISSION_LIST), permission, false);
+                addProperty(returnObj, KEY_ACTIVE, false);
+            } else {
+                addProperty(returnObj.getJSONObject(KEY_PERMISSION_LIST), permission, true);
             }
         }
-
-        return true;
+        return returnObj;
     }
 
     private void addProperty(JSONObject obj, String key, Object value) {
@@ -165,9 +175,6 @@ public class Permissions extends CordovaPlugin {
     }
 
     private void goToAppSetting(Context context) {
-//        String sdk = android.os.Build.VERSION.SDK; // SDK号
-//        String model = android.os.Build.MODEL; // 手机型号
-//        String release = android.os.Build.VERSION.RELEASE; // android系统版本号
         String brand = Build.BRAND;//手机厂商
         if (TextUtils.equals(brand.toLowerCase(), "redmi") || TextUtils.equals(brand.toLowerCase(), "xiaomi")) {
             gotoMiuiPermission(context);//小米
@@ -179,6 +186,7 @@ public class Permissions extends CordovaPlugin {
             context.startActivity(getAppDetailSettingIntent(context));
         }
     }
+
     /**
      * 跳转到miui的权限管理页面
      */

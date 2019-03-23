@@ -163,6 +163,9 @@ function deprecated(name) {
 
 Permissions.prototype = {
     checkPermission: function(permission, successCallback, errorCallback) {
+    if(typeof permission == 'string'){
+        permission = [permission]
+    }
         cordova.exec(successCallback, errorCallback, permissionsName, 'checkPermission', [permission]);
     },
     requestPermission: function(permission, successCallback, errorCallback) {
@@ -196,4 +199,3 @@ Permissions.prototype.goToAppSetting = function () {
 };
 
 module.exports = new Permissions();
-
