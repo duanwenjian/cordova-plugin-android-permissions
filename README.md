@@ -26,7 +26,6 @@ Usage
 ```javascript
 var permissions = cordova.plugins.permissions;
 permissions.checkPermission(permission, successCallback, errorCallback);
-permissions.requestPermission(permission, successCallback, errorCallback);
 permissions.requestPermissions(permissions, successCallback, errorCallback);
 ```
 
@@ -103,6 +102,13 @@ function success( status ) {
       error);
   }
 }
+```
+
+#### Go systemManeger setting permissions
+```js
+
+permissions.goToAppSetting();
+
 ```
 
 License

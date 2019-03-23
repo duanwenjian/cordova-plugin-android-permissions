@@ -58,6 +58,7 @@ public class Permissions extends CordovaPlugin {
             return true;
         }else if(action.equals("goToAppSetting")){
             goToAppSetting(cordova.getActivity());
+            return true;
         }
         return false;
     }

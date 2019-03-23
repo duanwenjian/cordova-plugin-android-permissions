@@ -191,9 +191,9 @@ Permissions.prototype.hasPermission = function (permission, successCallback, err
     }
     this.checkPermission.call(this, permission, successCallback, errorCallback);
 };
-Permissions.prototype.goToAppSetting = function (successCallback, errorCallback) {
+Permissions.prototype.goToAppSetting = function () {
     console.log("goToAppSetting() function deprecated. Considers using goToAppSetting()");
-    cordova.exec(successCallback, errorCallback,permissionsName,"goToAppSetting");
+    cordova.exec(null, null,permissionsName,"goToAppSetting");
 };
 
 module.exports = new Permissions();
