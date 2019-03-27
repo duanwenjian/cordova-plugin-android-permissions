@@ -163,7 +163,7 @@ function deprecated(name) {
 
 Permissions.prototype = {
     checkPermission: function(permission, successCallback, errorCallback) {
-        successCallback( {hasPermission: true} );
+        successCallback( {active:true} );
     },
     requestPermission: function(permission, successCallback, errorCallback) {
         if (typeof permission === "function") {
@@ -189,6 +189,10 @@ Permissions.prototype.hasPermission = function (permission, successCallback, err
         permission = arguments[2];
     }
     this.checkPermission.call(this, permission, successCallback, errorCallback);
+};
+Permissions.prototype.goToAppSetting = function () {
+    // console.log("goToAppSetting() function deprecated. Considers using goToAppSetting()");
+    // cordova.exec(null, null,permissionsName,"goToAppSetting");
 };
 
 module.exports = new Permissions();
